@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Wonka Lock</title>
   <link href="https://fonts.googleapis.com/css2?family=Macondo&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#cc00cc">
   <style>
     body {
       font-family: 'Macondo', cursive;
@@ -73,7 +76,7 @@
     }
 
     #textbox {
-      font-size: 36px;
+      font-size: 24px;
       margin: 20px auto;
       padding: 12px;
       border: 4px solid #ffcc00;
@@ -122,7 +125,7 @@
   </div>
 
   <div id="success-screen" class="screen">
-    🎉 Correct! You have escaped the room!
+    🎉 Correct! Welcome to the Chocolate Vault!
   </div>
 
   <script>
@@ -174,6 +177,13 @@
       btn.textContent = letter;
       btn.onclick = () => addLetter(letter);
       container.appendChild(btn);
+    }
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log('Service Worker registered!'))
+        .catch(error => console.log('Service Worker registration failed:', error));
     }
   </script>
 
