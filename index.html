@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Password Lock Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f8f8f8;
+    }
+    .screen {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      max-width: 300px;
+      margin: 20px auto;
+    }
+    button {
+      padding: 15px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ccc;
+    }
+    #textbox {
+      font-size: 24px;
+      margin: 20px;
+      padding: 10px;
+      border: 2px solid #000;
+      width: 80%;
+      max-width: 300px;
+    }
+    #success-screen {
+      background-color: #00cc44;
+      color: white;
+      font-size: 28px;
+      padding: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="setup-screen" class="screen active">
+    <h2>Set Your Password</h2>
+    <input type="password" id="set-password" />
+    <br/><br/>
+    <button onclick="savePassword()">Lock</button>
+  </div>
+
+  <div id="lock-screen" class="screen">
+    <h2>Enter Password</h2>
+    <div id="textbox"></div>
+    <div class="button-grid" id="letter-buttons"></div>
+    <button onclick="submitPassword()">Submit</button>
+  </div>
+
+  <div id="success-screen" class="screen">
+    ✅ Correct Password!
+  </div>
+
+  <script>
+    let savedPassword = "";
+    let inputBuffer = "";
+
+    function savePassword() {
+      const pw = document.getElementById("set-password").value.trim().toUpperCase();
+      if (pw.length > 0) {
+        savedPassword = pw;
+        showScreen("lock-screen");
+      }
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      if (id === "lock-screen") updateTextbox();
+    }
+
+    function updateTextbox() {
+      document.getElementById("textbox").textContent = inputBuffer;
+    }
+
+    function submitPassword() {
+      if (inputBuffer === savedPassword) {
+        showScreen("success-screen");
+        setTimeout(() => {
+          inputBuffer = "";
+          document.getElementById("set-password").value = "";
+          showScreen("setup-screen");
+        }, 10000);
+      } else {
+        inputBuffer = "";
+        updateTextbox();
+      }
+    }
+
+    function addLetter(letter) {
+      inputBuffer += letter;
+      updateTextbox();
+    }
+
+    // Initialize A–Z buttons
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const container = document.getElementById("letter-buttons");
+    for (const letter of letters) {
+      const btn = document.createElement("button");
+      btn.textContent = letter;
+      btn.onclick = () => addLetter(letter);
+      container.appendChild(btn);
+    }
+  </script>
+
+</body>
+</html>
