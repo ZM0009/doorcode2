@@ -107,7 +107,6 @@
       100% { background-color: #66ff99; }
     }
 
-    /* iPad and landscape layout */
     @media (min-width: 768px) and (orientation: landscape) {
       .screen.active {
         display: flex;
@@ -163,6 +162,9 @@
     </div>
     <div class="buttons-area">
       <div class="button-grid" id="letter-buttons"></div>
+      <br>
+      <button onclick="backspace()">← BACKSPACE</button>
+      <br><br>
       <button onclick="submitPassword()">SUBMIT</button>
     </div>
   </div>
@@ -171,6 +173,7 @@
     🎉 Correct! Welcome to the Chocolate Vault!
   </div>
 
+  <!-- Audio -->
   <audio id="correct-sound" src="correct.mp3" preload="auto"></audio>
   <audio id="incorrect-sound" src="incorrect.mp3" preload="auto"></audio>
 
@@ -201,7 +204,7 @@
 
     function submitPassword() {
       if (inputBuffer === savedPassword) {
-        correctSound.play();
+        playSound(correctSound);
         showScreen("success-screen");
         setTimeout(() => {
           inputBuffer = "";
@@ -209,7 +212,7 @@
           showScreen("setup-screen");
         }, 10000);
       } else {
-        incorrectSound.play();
+        playSound(incorrectSound);
         inputBuffer = "";
         updateTextbox();
       }
@@ -225,7 +228,13 @@
       updateTextbox();
     }
 
-    // Create alphabet buttons and backspace
+    function playSound(audioElement) {
+      if (audioElement) {
+        audioElement.play().catch(err => console.log("Audio playback blocked or missing file.", err));
+      }
+    }
+
+    // Create letter buttons
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const container = document.getElementById("letter-buttons");
     for (const letter of letters) {
@@ -234,11 +243,6 @@
       btn.onclick = () => addLetter(letter);
       container.appendChild(btn);
     }
-
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "← BACK";
-    backBtn.onclick = backspace;
-    container.appendChild(backBtn);
 
     // Register service worker
     if ('serviceWorker' in navigator) {
