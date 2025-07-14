@@ -106,31 +106,80 @@
       0% { background-color: #33cc66; }
       100% { background-color: #66ff99; }
     }
+
+    /* iPad and landscape layout */
+    @media (min-width: 768px) and (orientation: landscape) {
+      .screen.active {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 40px;
+      }
+
+      .textbox-area, .buttons-area {
+        flex: 1;
+        max-width: 500px;
+      }
+
+      h2 {
+        font-size: 2.5em;
+      }
+
+      button {
+        font-size: 24px;
+        padding: 18px 24px;
+      }
+
+      .button-grid {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 20px;
+        max-width: 600px;
+      }
+
+      #textbox, input[type="password"] {
+        font-size: 28px;
+        padding: 18px;
+        max-width: 500px;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div id="setup-screen" class="screen active">
-    <h2>🍫 Set Your Secret Candy Code</h2>
-    <input type="password" id="set-password" placeholder="Type your code" />
-    <br/><br/>
-    <button onclick="savePassword()">LOCK IT IN</button>
+    <div class="textbox-area">
+      <h2>🍫 Set Your Secret Candy Code</h2>
+      <input type="password" id="set-password" placeholder="Type your code" />
+      <br/><br/>
+      <button onclick="savePassword()">LOCK IT IN</button>
+    </div>
   </div>
 
   <div id="lock-screen" class="screen">
-    <h2>🔐 Enter the Candy Code</h2>
-    <div id="textbox"></div>
-    <div class="button-grid" id="letter-buttons"></div>
-    <button onclick="submitPassword()">SUBMIT</button>
+    <div class="textbox-area">
+      <h2>🔐 Enter the Candy Code</h2>
+      <div id="textbox"></div>
+    </div>
+    <div class="buttons-area">
+      <div class="button-grid" id="letter-buttons"></div>
+      <button onclick="submitPassword()">SUBMIT</button>
+    </div>
   </div>
 
   <div id="success-screen" class="screen">
-    🎉 Correct! You've escaped the room!
+    🎉 Correct! Welcome to the Chocolate Vault!
   </div>
+
+  <audio id="correct-sound" src="correct.mp3" preload="auto"></audio>
+  <audio id="incorrect-sound" src="incorrect.mp3" preload="auto"></audio>
 
   <script>
     let savedPassword = "";
     let inputBuffer = "";
+
+    const correctSound = document.getElementById("correct-sound");
+    const incorrectSound = document.getElementById("incorrect-sound");
 
     function savePassword() {
       const pw = document.getElementById("set-password").value.trim().toUpperCase();
@@ -152,6 +201,7 @@
 
     function submitPassword() {
       if (inputBuffer === savedPassword) {
+        correctSound.play();
         showScreen("success-screen");
         setTimeout(() => {
           inputBuffer = "";
@@ -159,6 +209,7 @@
           showScreen("setup-screen");
         }, 10000);
       } else {
+        incorrectSound.play();
         inputBuffer = "";
         updateTextbox();
       }
@@ -169,7 +220,12 @@
       updateTextbox();
     }
 
-    // Create alphabet buttons
+    function backspace() {
+      inputBuffer = inputBuffer.slice(0, -1);
+      updateTextbox();
+    }
+
+    // Create alphabet buttons and backspace
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const container = document.getElementById("letter-buttons");
     for (const letter of letters) {
@@ -179,7 +235,12 @@
       container.appendChild(btn);
     }
 
-    // Register service worker for PWA
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "← BACK";
+    backBtn.onclick = backspace;
+    container.appendChild(backBtn);
+
+    // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js')
         .then(() => console.log('Service Worker registered!'))
