@@ -58,7 +58,7 @@
       font-weight: bold;
       cursor: pointer;
       margin: 5px;
-      touch-action: manipulation; /* ✅ Prevent iOS double-tap zoom */
+      touch-action: manipulation;
     }
 
     .button-grid {
@@ -85,8 +85,14 @@
     #success-screen {
       background-color: #33cc66;
       color: white;
-      font-size: 28px;
-      padding: 50px;
+      font-size: 24px;
+      padding: 30px;
+    }
+
+    #wrong-guesses {
+      margin-top: 20px;
+      color: #fff;
+      font-size: 18px;
     }
 
     @keyframes fadeIn {
@@ -114,6 +120,9 @@
 
   <div id="success-screen" class="screen">
     🎉 Correct! You've Escaped The Room!
+    <div id="wrong-guesses"></div>
+    <br>
+    <button onclick="manualReset()">RESET GAME</button>
   </div>
 
   <audio id="correct-sound" src="correct.mp3" preload="auto"></audio>
@@ -122,15 +131,19 @@
   <script>
     let savedPassword = "";
     let inputBuffer = "";
+    let wrongGuesses = [];
 
     const textbox = document.getElementById("textbox");
     const correctSound = document.getElementById("correct-sound");
     const incorrectSound = document.getElementById("incorrect-sound");
+    const wrongGuessesDiv = document.getElementById("wrong-guesses");
 
     function savePassword() {
       const pw = document.getElementById("set-password").value.trim().toUpperCase();
       if (pw) {
         savedPassword = pw;
+        wrongGuesses = [];
+        inputBuffer = "";
         showScreen("lock-screen");
       }
     }
@@ -157,21 +170,42 @@
 
     function submitPassword() {
       if (inputBuffer === savedPassword) {
-        correctSound.play().catch(err => console.warn("Sound blocked", err));
+        playSound(correctSound);
+        displayWrongGuesses();
         showScreen("success-screen");
-        setTimeout(() => {
-          inputBuffer = "";
-          document.getElementById("set-password").value = "";
-          showScreen("setup-screen");
-        }, 10000);
       } else {
-        incorrectSound.play().catch(err => console.warn("Sound blocked", err));
+        if (inputBuffer.length > 0) {
+          wrongGuesses.push(inputBuffer);
+        }
+        playSound(incorrectSound);
         inputBuffer = "";
         updateTextbox();
       }
     }
 
-    // Generate letter buttons
+    function displayWrongGuesses() {
+      if (wrongGuesses.length > 0) {
+        wrongGuessesDiv.innerHTML = `
+          <h3>❌ Incorrect Guesses:</h3>
+          <p>${wrongGuesses.map(g => `<code>${g}</code>`).join(", ")}</p>
+        `;
+      } else {
+        wrongGuessesDiv.innerHTML = `<p>No incorrect guesses. You nailed it! 🎯</p>`;
+      }
+    }
+
+    function manualReset() {
+      inputBuffer = "";
+      wrongGuesses = [];
+      document.getElementById("set-password").value = "";
+      wrongGuessesDiv.innerHTML = "";
+      showScreen("setup-screen");
+    }
+
+    function playSound(audioEl) {
+      audioEl.play().catch(err => console.warn("Sound blocked", err));
+    }
+
     const container = document.getElementById("letter-buttons");
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(letter => {
       const btn = document.createElement("button");
