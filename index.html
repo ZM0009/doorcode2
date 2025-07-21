@@ -58,6 +58,7 @@
       font-weight: bold;
       cursor: pointer;
       margin: 5px;
+      touch-action: manipulation; /* ✅ Prevent iOS double-tap zoom */
     }
 
     .button-grid {
@@ -112,7 +113,7 @@
   </div>
 
   <div id="success-screen" class="screen">
-    🎉 Correct! You've escaped the room!
+    🎉 Correct! You've Escaped The Room!
   </div>
 
   <audio id="correct-sound" src="correct.mp3" preload="auto"></audio>
