@@ -129,96 +129,97 @@
   <audio id="incorrect-sound" src="incorrect.mp3" preload="auto"></audio>
 
   <script>
-    let savedPassword = "";
-    let inputBuffer = "";
-    let wrongGuesses = [];
+  let savedPassword = "";
+  let inputBuffer = "";
+  let wrongGuesses = [];
 
-    const textbox = document.getElementById("textbox");
-    const correctSound = document.getElementById("correct-sound");
-    const incorrectSound = document.getElementById("incorrect-sound");
-    const wrongGuessesDiv = document.getElementById("wrong-guesses");
+  const textbox = document.getElementById("textbox");
+  const correctSound = document.getElementById("correct-sound");
+  const incorrectSound = document.getElementById("incorrect-sound");
+  const wrongGuessesDiv = document.getElementById("wrong-guesses");
 
-    function savePassword() {
-      const pw = document.getElementById("set-password").value.trim().toUpperCase();
-      if (pw) {
-        savedPassword = pw;
-        wrongGuesses = [];
-        inputBuffer = "";
-        showScreen("lock-screen");
-      }
-    }
-
-    function showScreen(id) {
-      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-      updateTextbox();
-    }
-
-    function addLetter(letter) {
-      inputBuffer += letter;
-      updateTextbox();
-    }
-
-    function backspace() {
-      inputBuffer = inputBuffer.slice(0, -1);
-      updateTextbox();
-    }
-
-    function updateTextbox() {
-      textbox.textContent = inputBuffer;
-    }
-
-    function submitPassword() {
-      if (inputBuffer === savedPassword) {
-        playSound(correctSound);
-        displayWrongGuesses();
-        showScreen("success-screen");
-      } else {
-        if (inputBuffer.length > 0) {
-          wrongGuesses.push(inputBuffer);
-        }
-        playSound(incorrectSound);
-        inputBuffer = "";
-        updateTextbox();
-      }
-    }
-
-    function displayWrongGuesses() {
-      if (wrongGuesses.length > 0) {
-        wrongGuessesDiv.innerHTML = `
-          <h3>❌ Incorrect Guesses:</h3>
-          <p>${wrongGuesses.map(g => `<code>${g}</code>`).join(", ")}</p>
-        `;
-      } else {
-        wrongGuessesDiv.innerHTML = `<p>No incorrect guesses. You nailed it! 🎯</p>`;
-      }
-    }
-
-    function manualReset() {
-      inputBuffer = "";
+  function savePassword() {
+    const pw = document.getElementById("set-password").value.trim().toUpperCase();
+    if (pw) {
+      savedPassword = pw;
       wrongGuesses = [];
-      document.getElementById("set-password").value = "";
-      wrongGuessesDiv.innerHTML = "";
-      showScreen("setup-screen");
+      inputBuffer = "";
+      showScreen("lock-screen");
     }
+  }
 
-    function playSound(audioEl) {
-      audioEl.play().catch(err => console.warn("Sound blocked", err));
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    updateTextbox();
+  }
+
+  function addLetter(letter) {
+    inputBuffer += letter;
+    updateTextbox();
+  }
+
+  function backspace() {
+    inputBuffer = inputBuffer.slice(0, -1);
+    updateTextbox();
+  }
+
+  function updateTextbox() {
+    // 🔐 Show asterisks only
+    textbox.textContent = '*'.repeat(inputBuffer.length);
+  }
+
+  function submitPassword() {
+    if (inputBuffer === savedPassword) {
+      playSound(correctSound);
+      displayWrongGuesses();
+      showScreen("success-screen");
+    } else {
+      if (inputBuffer.length > 0) {
+        wrongGuesses.push(inputBuffer);
+      }
+      playSound(incorrectSound);
+      inputBuffer = "";
+      updateTextbox();
     }
+  }
 
-    const container = document.getElementById("letter-buttons");
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(letter => {
-      const btn = document.createElement("button");
-      btn.textContent = letter;
-      btn.onclick = () => addLetter(letter);
-      container.appendChild(btn);
-    });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log("Service Worker registered"))
-        .catch(console.error);
+  function displayWrongGuesses() {
+    if (wrongGuesses.length > 0) {
+      wrongGuessesDiv.innerHTML = `
+        <h3>❌ Incorrect Guesses:</h3>
+        <p>${wrongGuesses.map(g => `<code>${g}</code>`).join(", ")}</p>
+      `;
+    } else {
+      wrongGuessesDiv.innerHTML = `<p>No incorrect guesses. You nailed it! 🎯</p>`;
     }
+  }
+
+  function manualReset() {
+    inputBuffer = "";
+    wrongGuesses = [];
+    document.getElementById("set-password").value = "";
+    wrongGuessesDiv.innerHTML = "";
+    showScreen("setup-screen");
+  }
+
+  function playSound(audioEl) {
+    audioEl.play().catch(err => console.warn("Sound blocked", err));
+  }
+
+  const container = document.getElementById("letter-buttons");
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(letter => {
+    const btn = document.createElement("button");
+    btn.textContent = letter;
+    btn.onclick = () => addLetter(letter);
+    container.appendChild(btn);
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log("Service Worker registered"))
+      .catch(console.error);
+  }
   </script>
 
 </body>
