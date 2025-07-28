@@ -18,6 +18,7 @@
       text-align: center;
       min-height: 100vh;
       background-size: cover;
+      overflow: hidden;
     }
 
     .screen {
@@ -95,6 +96,30 @@
       font-size: 18px;
     }
 
+    #room-activated-screen {
+      background-color: #ffcc00;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      height: 100vh;
+    }
+
+    #green-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: limegreen;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1000;
+      transition: opacity 0.5s ease-out;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -103,11 +128,17 @@
 </head>
 <body>
 
+  <div id="green-flash"></div>
+
   <div id="setup-screen" class="screen active">
     <h2>🍫 Set Your Secret Candy Code</h2>
     <input type="password" id="set-password" placeholder="Enter password"/>
     <br/><br/>
     <button onclick="savePassword()">LOCK IT IN</button>
+  </div>
+
+  <div id="room-activated-screen" class="screen">
+    <div id="room-activation-text"></div>
   </div>
 
   <div id="lock-screen" class="screen">
@@ -119,7 +150,7 @@
   </div>
 
   <div id="success-screen" class="screen">
-    🎉 Correct! You've Escaped The Room!
+    🎉 Correct! Welcome to the Chocolate Vault!
     <div id="wrong-guesses"></div>
     <br>
     <button onclick="manualReset()">RESET GAME</button>
@@ -129,97 +160,114 @@
   <audio id="incorrect-sound" src="incorrect.mp3" preload="auto"></audio>
 
   <script>
-  let savedPassword = "";
-  let inputBuffer = "";
-  let wrongGuesses = [];
+    let savedPassword = "";
+    let inputBuffer = "";
+    let wrongGuesses = [];
 
-  const textbox = document.getElementById("textbox");
-  const correctSound = document.getElementById("correct-sound");
-  const incorrectSound = document.getElementById("incorrect-sound");
-  const wrongGuessesDiv = document.getElementById("wrong-guesses");
+    const textbox = document.getElementById("textbox");
+    const correctSound = document.getElementById("correct-sound");
+    const incorrectSound = document.getElementById("incorrect-sound");
+    const wrongGuessesDiv = document.getElementById("wrong-guesses");
+    const greenFlash = document.getElementById("green-flash");
 
-  function savePassword() {
-    const pw = document.getElementById("set-password").value.trim().toUpperCase();
-    if (pw) {
-      savedPassword = pw;
-      wrongGuesses = [];
-      inputBuffer = "";
-      showScreen("lock-screen");
-    }
-  }
-
-  function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-    updateTextbox();
-  }
-
-  function addLetter(letter) {
-    inputBuffer += letter;
-    updateTextbox();
-  }
-
-  function backspace() {
-    inputBuffer = inputBuffer.slice(0, -1);
-    updateTextbox();
-  }
-
-  function updateTextbox() {
-    // 🔐 Show asterisks only
-    textbox.textContent = '*'.repeat(inputBuffer.length);
-  }
-
-  function submitPassword() {
-    if (inputBuffer === savedPassword) {
-      playSound(correctSound);
-      displayWrongGuesses();
-      showScreen("success-screen");
-    } else {
-      if (inputBuffer.length > 0) {
-        wrongGuesses.push(inputBuffer);
+    function savePassword() {
+      const pw = document.getElementById("set-password").value.trim().toUpperCase();
+      if (pw) {
+        savedPassword = pw;
+        wrongGuesses = [];
+        inputBuffer = "";
+        showScreen("room-activated-screen");
+        document.getElementById("room-activation-text").textContent = "";
+        setTimeout(() => {
+          document.getElementById("room-activation-text").textContent = "ROOM ACTIVATED";
+        }, 1000);
+        setTimeout(() => {
+          showScreen("lock-screen");
+        }, 2500);
       }
-      playSound(incorrectSound);
-      inputBuffer = "";
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
       updateTextbox();
     }
-  }
 
-  function displayWrongGuesses() {
-    if (wrongGuesses.length > 0) {
-      wrongGuessesDiv.innerHTML = `
-        <h3>❌ Incorrect Guesses:</h3>
-        <p>${wrongGuesses.map(g => `<code>${g}</code>`).join(", ")}</p>
-      `;
-    } else {
-      wrongGuessesDiv.innerHTML = `<p>No incorrect guesses. You nailed it! 🎯</p>`;
+    function addLetter(letter) {
+      inputBuffer += letter;
+      updateTextbox();
     }
-  }
 
-  function manualReset() {
-    inputBuffer = "";
-    wrongGuesses = [];
-    document.getElementById("set-password").value = "";
-    wrongGuessesDiv.innerHTML = "";
-    showScreen("setup-screen");
-  }
+    function backspace() {
+      inputBuffer = inputBuffer.slice(0, -1);
+      updateTextbox();
+    }
 
-  function playSound(audioEl) {
-    audioEl.play().catch(err => console.warn("Sound blocked", err));
-  }
+    function updateTextbox() {
+      textbox.textContent = '*'.repeat(inputBuffer.length);
+    }
 
-  const container = document.getElementById("letter-buttons");
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(letter => {
-    const btn = document.createElement("button");
-    btn.textContent = letter;
-    btn.onclick = () => addLetter(letter);
-    container.appendChild(btn);
-  });
+    function submitPassword() {
+      if (inputBuffer === savedPassword) {
+        playSound(correctSound);
+        flashGreen(() => {
+          displayWrongGuesses();
+          showScreen("success-screen");
+        });
+      } else {
+        if (inputBuffer.length > 0) {
+          wrongGuesses.push(inputBuffer);
+        }
+        playSound(incorrectSound);
+        inputBuffer = "";
+        updateTextbox();
+      }
+    }
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log("Service Worker registered"))
-      .catch(console.error);
-  }
+    function displayWrongGuesses() {
+      if (wrongGuesses.length > 0) {
+        wrongGuessesDiv.innerHTML = `
+          <h3>❌ Incorrect Guesses:</h3>
+          <p>${wrongGuesses.map(g => `<code>${g}</code>`).join(", ")}</p>
+        `;
+      } else {
+        wrongGuessesDiv.innerHTML = `<p>No incorrect guesses. You nailed it! 🎯</p>`;
+      }
+    }
+
+    function manualReset() {
+      inputBuffer = "";
+      wrongGuesses = [];
+      document.getElementById("set-password").value = "";
+      wrongGuessesDiv.innerHTML = "";
+      showScreen("setup-screen");
+    }
+
+    function flashGreen(callback) {
+      greenFlash.style.opacity = "1";
+      setTimeout(() => {
+        greenFlash.style.opacity = "0";
+        callback();
+      }, 400);
+    }
+
+    function playSound(audioEl) {
+      audioEl.play().catch(err => console.warn("Sound blocked", err));
+    }
+
+    const container = document.getElementById("letter-buttons");
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(letter => {
+      const btn = document.createElement("button");
+      btn.textContent = letter;
+      btn.onclick = () => addLetter(letter);
+      container.appendChild(btn);
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log("Service Worker registered"))
+        .catch(console.error);
+    }
   </script>
 
 </body>
